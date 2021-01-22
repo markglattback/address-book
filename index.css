@@ -1,0 +1,23 @@
+input {
+  display: block;
+}
+
+input.error {
+  border: 1px solid red;
+}
+
+button {
+  display: block;
+}
+
+#people {
+  list-style: none;
+}
+
+.person-list-item {
+  display: grid;
+  place-items: center;
+  width: 33vw;
+  grid-template-columns: auto auto;
+  margin: 0;
+}
