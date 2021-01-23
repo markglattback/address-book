@@ -1,8 +1,29 @@
+import './index.css';
+
+interface Person {
+  _id: string;
+  firstName: string;
+  otherNames: string;
+  email: string;
+  telephone: string;
+  street: string;
+  town: string;
+  country: string;
+}
+
 class AddressBook {
+
+  private readonly alphaNumeric: RegExp;
+  private readonly phoneNumber: RegExp;
+
   constructor() {
+    // Initialise LocalStorage
+
     if (!localStorage.getItem('people')) {
       localStorage.setItem('people', stringify([]));
     }
+
+    // RegExp for Validation
 
     this.alphaNumeric = new RegExp(/^[a-z]+$/, 'i');
     this.phoneNumber = new RegExp(/^0{1}[0-9]{9,10}$/);
@@ -10,8 +31,8 @@ class AddressBook {
 
   // PUBLIC API
 
-  addPerson() {
-    const person = this.getInputValues();
+  public addPerson(): void {
+    const person: Person = this.getInputValues();
     const errors = this.validate(person);
     const inputs = this.getInputs();
 
@@ -26,7 +47,7 @@ class AddressBook {
       people.push(person);
       localStorage.setItem('people', stringify(people));
 
-      
+
     } else {
       errors.forEach(error => {
         const input = this.getInput(error);
@@ -35,16 +56,16 @@ class AddressBook {
     }
   }
 
-  removePerson(id) {
-    const people = this.getPeopleFromStorage();
+  public removePerson(id: string): void {
+    const people: Person[] = this.getPeopleFromStorage();
 
     const filtered = people.filter(person => person._id !== id);
 
     localStorage.setItem('people', stringify(filtered));
   }
 
-  searchPerson(search) {
-    const people = this.getPeopleFromStorage();
+  searchPerson(search: string): Person[] {
+    const people: Person[] = this.getPeopleFromStorage();
 
     return people.filter(person => {
       if (person.firstName.includes(search)) return true;
@@ -60,10 +81,7 @@ class AddressBook {
 
 
   // PRIVATE FIELDS
-
-  alphaNumeric = undefined;
-
-  generateRandomId() {
+  private generateRandomId(): string {
     function randomNum() {
       return Math.floor(Math.random() * 10);
     }
@@ -85,11 +103,11 @@ class AddressBook {
     return id.join('');
   }
 
-  getInput(id) {
-    return document.getElementById(id);
+  getInput(id: string): HTMLInputElement {
+    return document.getElementById(id) as HTMLInputElement;
   }
 
-  getInputs() {
+  getInputs(): HTMLInputElement[] {
     const inputs = [];
 
     inputs.push(this.getInput('first-name'));
@@ -103,12 +121,12 @@ class AddressBook {
     return inputs;
   }
 
-  getInputValues() {
-    function getValue(id) {
-      return document.getElementById(id).value;
+  getInputValues(): Person {
+    function getValue(id: string) {
+      return (document.getElementById(id) as HTMLInputElement).value;
     }
 
-    const person = {
+    const person: Person = {
       _id: this.generateRandomId(),
       firstName: getValue('first-name'),
       otherNames: getValue('other-names'),
@@ -122,11 +140,11 @@ class AddressBook {
     return person;
   }
 
-  getPeopleFromStorage() {
+  getPeopleFromStorage(): Person[] {
     return parse(localStorage.getItem('people'));
   }
 
-  validate(person) {
+  validate(person: Person) {
     const errors = [];
     if (!this.validateFirstName(person.firstName)) errors.push('first-name');
     if (!this.validateOtherNames(person.otherNames)) errors.push('other-names');
@@ -139,26 +157,26 @@ class AddressBook {
     return errors;
   }
 
-  validateFirstName(string) {
-    if (string === '') return false;
-    if (!this.alphaNumeric.test(string)) return false;
+  validateFirstName(name: string): boolean {
+    if (name === '') return false;
+    if (!this.alphaNumeric.test(name)) return false;
 
     return true;
   }
 
-  validateOtherNames(string) {
-    if (string === '') return false;
-    const noWhitespace = string.replace('/\s/', '');
+  validateOtherNames(names: string): boolean {
+    if (names === '') return false;
+    const noWhitespace = names.replace('/\s/', '');
     if (!this.alphaNumeric.test(noWhitespace)) return false;
 
     return true;
   }
 
-  validateEmail(email) {
+  validateEmail(email: string): boolean {
     if (email === '') return false;
 
     // full disclosure: taken from stackoverflow https://stackoverflow.com/questions/46155/how-to-validate-an-email-address-in-javascript
-    function validateEmail(email) {
+    function validateEmail(email: string) {
       const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
       return re.test(String(email).toLowerCase());
     }
@@ -168,25 +186,25 @@ class AddressBook {
     return true;
   }
 
-  validateTelephone(number) {
+  validateTelephone(number: string): boolean {
     if (number === '') return false;
     if (!this.phoneNumber.test(number)) return false;
 
     return true;
   }
 
-  validateAddressLine(string) {
-    if (string === '') return false;
+  validateAddressLine(address: string): boolean {
+    if (address === '') return false;
 
     return true;
   }
 }
 
-function stringify(val) {
+function stringify(val: object): string {
   return JSON.stringify(val, null, 2);
 }
 
-function parse(val) {
+function parse(val: string) {
   return JSON.parse(val);
 }
 
@@ -201,24 +219,20 @@ const searchForm = document.getElementById('search-form');
 const searchInput = document.getElementById('search-input');
 searchInput.addEventListener('keypress', handleSearch);
 
-function handleSubmit(e) {
+function handleSubmit(e: Event) {
   e.preventDefault();
   book.addPerson();
 }
 
-function handleSearch(e) {
-  const matches = book.searchPerson(searchInput.value);
-  
+function handleSearch(e: Event) {
+  const matches = book.searchPerson((searchInput as HTMLInputElement).value);
+
   matches.forEach(person => {
     addPersonToDOM(person);
   });
 }
 
-function handleRemoval(e) {
-  book.removePerson(id);
-}
-
-function addPersonToDOM(person) {
+function addPersonToDOM(person: Person) {
   const idSelector = `li[data-id="${person._id}"]`;
 
   // if person is already in the DOM don't re-add them
@@ -230,16 +244,16 @@ function addPersonToDOM(person) {
   const li = document.createElement('li');
   li.classList.add('person-list-item');
   li.dataset.id = person._id;
-  
+
   const pre = document.createElement('pre');
   pre.innerText = JSON.stringify(person, null, 2);
   pre.dataset.id = person._id;
-  
+
   const button = document.createElement('button');
   button.innerText = "Remove";
   button.dataset.id = person._id;
-  
-  button.addEventListener('click', function() {
+
+  button.addEventListener('click', function () {
     book.removePerson(this.dataset.id);
     const old = document.querySelector(idSelector);
 
